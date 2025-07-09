@@ -1,4 +1,4 @@
-# Claude Project Analyzer
+# Claude Project Analyzer v1.1.0
 
 A tool for generating minimal but effective prompts for Claude.AI based on project structure and code analysis.
 
@@ -15,8 +15,8 @@ Working with large codebases in Claude.AI can quickly consume tokens, making it 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/claude-analyzer
-cd claude-analyzer
+git clone https://github.com/AlexJ-StL/Claude-analyzer.git
+cd Claude-analyzer
 
 # Install dependencies
 npm install
@@ -49,6 +49,7 @@ claude-analyzer /path/to/your/project --max-files 10 --max-lines 30
 - `-v, --version`: Display version information
 - `-o, --output FILE`: Write output to FILE instead of stdout
 - `-s, --structure-only`: Only include structure info, no code samples
+- `-p, --provider`: Specify the LLM provider (claude, gemini, openrouter, litellm) (default: claude)
 - `-f, --max-files N`: Maximum number of files to analyze (default: 15)
 - `-l, --max-lines N`: Maximum lines per file to include (default: 50)
 
@@ -76,47 +77,17 @@ console.log(prompt);
 4. **Code Analysis**: Extracts key snippets and insights from the most important files
 5. **Prompt Generation**: Creates a compact but contextual prompt for Claude.AI
 
-## Sample Output
+## Changelog
 
-```
-## Project: my-web-app
+### v1.1.0 (2025-07-09)
+- Forked from the original repository.
+- Updated repository URLs in `package.json` and `README.md`.
+- Added a `.gitignore` file.
+- Updated version to 1.1.0.
+- Added a changelog to `README.md`.
 
-Primary language: JavaScript/TypeScript
-Description: A React-based web application for document management
-
-### Project Structure:
-- 128 files in 23 directories
-- Key directories: src, public, components, utils, api
-- Key files: src/index.js, src/App.js, package.json, src/components/Header.jsx, src/api/client.js
-
-### Main Dependencies:
-react, react-dom, axios, tailwindcss, zustand, and 12 more
-
-### Key File Contents:
-
-#### src/index.js
-```
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import { BrowserRouter } from 'react-router-dom';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
-```
-
-... [other key files] ...
-
-### Instructions for Claude:
-Based on this project structure and code samples, I'm working on this JavaScript/TypeScript project. Please help me with coding tasks, explanation, debugging, and feature suggestions based on this context. You should reference the provided code structure when responding to my questions about this project.
-```
+### v1.0.0
+- Initial release
 
 ## Benefits
 
