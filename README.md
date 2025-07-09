@@ -27,21 +27,50 @@ npm install -g .
 
 ## Usage
 
-### Command Line
+This tool generates a prompt that you can use with your chosen LLM provider. It does not directly interact with any LLM API.
+
+### 1. Generate a Prompt
+
+Run the tool with the path to your project and your chosen provider.
 
 ```bash
-# Basic usage
+# Basic usage (defaults to claude provider)
 claude-analyzer /path/to/your/project
 
-# Save output to file
-claude-analyzer /path/to/your/project --output prompt.md
+# Select a provider (claude, gemini, openrouter, or litellm)
+claude-analyzer /path/to/your/project -p gemini
 
-# Structure-only mode (no code samples)
-claude-analyzer /path/to/your/project --structure-only
-
-# Customize analysis depth
-claude-analyzer /path/to/your/project --max-files 10 --max-lines 30
+# Save the generated prompt to a file
+claude-analyzer /path/to/your/project -p claude -o claude-prompt.md
 ```
+
+### 2. Use the Prompt
+
+Copy the generated prompt and use it with your chosen provider's API or web interface.
+
+### Provider Details & API Keys
+
+This tool does not use your API keys. You will need to use your API key when you send the generated prompt to your chosen provider. For command-line usage with other tools, it is recommended to set your API keys as environment variables.
+
+**Claude**
+
+- **API Key Environment Variable:** `ANTHROPIC_API_KEY`
+- **Model Selection:** When you use the prompt with the Claude API or another tool, you can specify the model (e.g., `claude-3-opus-20240229`, `claude-3-sonnet-20240229`).
+
+**Gemini**
+
+- **API Key Environment Variable:** `GEMINI_API_KEY`
+- **Model Selection:** When you use the prompt with the Gemini API or another tool, you can specify the model (e.g., `gemini-1.5-pro-latest`).
+
+**OpenRouter**
+
+- **API Key Environment Variable:** `OPENROUTER_API_KEY`
+- **Model Selection:** OpenRouter allows you to use models from various providers. You will need to specify the model in your API request, for example `anthropic/claude-3-opus`.
+
+**LiteLLM**
+
+- **API Key Environment Variable:** Depends on the underlying provider you are using with LiteLLM (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+- **Model Selection:** You will need to specify the model when you use LiteLLM, for example `claude-3-opus-20240229`.
 
 ### Options
 
