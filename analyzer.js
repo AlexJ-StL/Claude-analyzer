@@ -132,6 +132,34 @@ function analyzeBasicInfo(rootPath, projectInfo) {
     projectInfo.devDependencies = packageJson.devDependencies || {};
     projectInfo.name = packageJson.name || projectInfo.name;
     projectInfo.description = packageJson.description || '';
+  // Map technical dependencies to human-readable names
+  const techMapping = {
+    'express': 'Express.js framework',
+    'react': 'React JavaScript library',
+    'redux': 'Redux state management',
+    'vue': 'Vue.js framework',
+    'axios': 'Axios HTTP client',
+    'dotenv': 'dotenv environment variables',
+    'eslint': 'ESLint code linter',
+    'mocha': 'Mocha testing framework',
+    'jest': 'Jest testing framework',
+    // Add more mappings as needed
+  };
+
+  // Function to apply mapping to dependencies
+  function mapDependencies(deps) {
+    return Object.fromEntries(
+      Object.entries(deps).map(([pkg, ver]) => {
+        const mappedName = techMapping[pkg] || pkg;
+        return [mappedName, ver];
+      })
+    );
+  }
+
+  // Apply mapping to both regular and dev dependencies
+  projectInfo.dependencies = mapDependencies(packageJson.dependencies || {});
+  projectInfo.devDependencies = mapDependencies(packageJson.devDependencies || {});
+
   } else if (hasPyProject) {
     projectInfo.language = 'Python';
   } else if (hasGemfile) {
@@ -151,17 +179,45 @@ function analyzeBasicInfo(rootPath, projectInfo) {
   }
 }
 
-/**
- * Gets the most important files for analysis
- * @param {string} dir - Directory to analyze
- * @param {Object} config - Configuration
- * @param {string} relativePath - Current relative path
- * @returns {Array} - A list of file information objects
- */
-function getImportantFiles(dir, config, relativePath = '') {
-  let allFiles = [];
+  /**
+   * Tracks directory classifications by role
+   * @type {Object}
+   */
+  const directoryAnalysis = {};
 
-  const items = fs.readdirSync(dir);
+  /**
+   * Classifies directories by common roles
+   * @param {string} dirPath - The directory name
+   * @returns {string} - The role category
+   */
+  function classifyDirectory(dirPath) {
+    const base = path.basename(dirPath);
+    if (base.startsWith('api') || base.includes('routes')) {
+      return 'Backend API';
+    }
+    if (base.startsWith('ui/') || base.startsWith('client')) {
+      return 'Frontend UI';
+    }
+    if (base === 'config' || base.includes('env')) {
+      return 'Configuration';
+    }
+    if (base.includes('test') && projectInfo.directories.includes('test')) {
+      return 'Testing';
+    }
+    return 'Unknown';
+  }
+
+  /**
+   * Gets the most important files for analysis
+   * @param {string} dir - Directory to analyze
+   * @param {Object} config - Configuration
+   * @param {string} relativePath - Current relative path
+   * @returns {Array} - A list of file information objects
+   */
+  function getImportantFiles(dir, config, relativePath = '') {
+    let allFiles = [];
+
+    const items = fs.readdirSync(dir);
 
   for (const item of items) {
     const fullPath = path.join(dir, item);
@@ -174,10 +230,24 @@ function getImportantFiles(dir, config, relativePath = '') {
 
     const stats = fs.statSync(fullPath);
 
-    if (stats.isDirectory()) {
-      const subFiles = getImportantFiles(fullPath, config, relPath);
-      allFiles = allFiles.concat(subFiles);
-    } else if (stats.isFile()) {
+if (stats.isDirectory()) {
+  // Handle directory roles classification
+  const base = path.basename(fullPath);
+  let dirRole = 'Supporting Infrastructure';
+  if (base.startsWith('api') || base.includes('routes')) {
+    dirRole = 'Backend API';
+  } else if (base.startsWith('ui') || base.startsWith('client')) {
+    dirRole = 'Frontend UI';
+  } else if (base === 'config' || base.includes('env')) {
+    dirRole = 'Configuration';
+  } else if (base.includes('test')) {
+    dirRole = 'Testing';
+  }
+  directoryAnalysis[fullPath] = dirRole;
+  // Recursively get files in subdirectories
+  const subFiles = getImportantFiles(fullPath, config, relPath);
+  allFiles = allFiles.concat(subFiles);
+} else if (stats.isFile()) {
       const fileExt = path.extname(item);
       if (config.fileExtensions.includes(fileExt)) {
         const fileInfo = {
@@ -264,4 +334,3 @@ function analyzeFileContents(files, projectInfo, config, rootPath) {
 export {
   generateMinimalPrompt
 };
-
