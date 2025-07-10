@@ -18,7 +18,7 @@ function mockApiResponse(status, body) {
 
 describe('OpenRouter Provider Tests', () => {
   it('processes valid response correctly', async () => {
-    const mockSuccess = provider.fetchData.mockImplementation(() =>
+    provider.fetchData.mockImplementation(() =>
       Promise.resolve({
         id: 'valid_id',
         body: { output: 'test completion' }

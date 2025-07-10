@@ -70,13 +70,16 @@ async function generateMinimalPrompt(rootPath, options = {}) {
 function analyzeProject(rootPath, config) {
   const projectInfo = {
     name: path.basename(rootPath),
-    files: [],
+    description: '',
+    language: null,
+    fileCount: 0,
+    directoryCount: 0,
     directories: [],
     keyFiles: [],
     dependencies: null,
-    language: null,
-    fileCount: 0,
-    directoryCount: 0
+    devDependencies: null,
+    readme: null,
+    fileAnalysis: []
   };
 
   // Check if directory exists
@@ -185,27 +188,6 @@ function analyzeBasicInfo(rootPath, projectInfo) {
    */
   const directoryAnalysis = {};
 
-  /**
-   * Classifies directories by common roles
-   * @param {string} dirPath - The directory name
-   * @returns {string} - The role category
-   */
-  function classifyDirectory(dirPath) {
-    const base = path.basename(dirPath);
-    if (base.startsWith('api') || base.includes('routes')) {
-      return 'Backend API';
-    }
-    if (base.startsWith('ui/') || base.startsWith('client')) {
-      return 'Frontend UI';
-    }
-    if (base === 'config' || base.includes('env')) {
-      return 'Configuration';
-    }
-    if (base.includes('test') && projectInfo.directories.includes('test')) {
-      return 'Testing';
-    }
-    return 'Unknown';
-  }
 
   /**
    * Gets the most important files for analysis
