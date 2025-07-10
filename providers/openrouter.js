@@ -47,6 +47,32 @@ ${file.sample}
   return prompt;
 }
 
+/**
+ * Fetches data from OpenRouter API
+ * @param {string} url - The endpoint URL
+ * @returns {Promise<Object>} - The response data
+ */
+async function fetchData(url, options) {
+  if (!url) throw new Error('Missing API endpoint URL');
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      ...options
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    // Handle fetch errors
+    return Promise.reject(new Error(
+      `Data fetch to OpenRouter failed: ${error.message}`
+    ));
+  }
+}
+
 export default {
-  formatPrompt
+  formatPrompt,
+  fetchData
 };
