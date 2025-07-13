@@ -1,65 +1,93 @@
 /**
- * Formats the project analysis data into a prompt for Claude
- * @param {Object} projectInfo - The analysis data
- * @param {Object} config - The configuration options
- * @returns {string} - The formatted prompt
- */
-function formatPrompt(projectInfo, config) {
-  let prompt = `The user wants to understand a project with the following structure and key files. Please provide a concise, high-level summary of the project's purpose, architecture, and key components based on the information below.\n\n`;
+* A provider for the [Claude AI](https://claude.ai) API.
+*
+* Formats prompts and submits calls to the API and returns the output.
+*/
 
-  // Start with project purpose
-  if (projectInfo.description && projectInfo.description !== 'Unknown') {
-    prompt += `Project Purpose: ${projectInfo.description}\n\n`;
-  } else {
-    prompt += `Project Purpose: Not specified\n\n`;
-  }
-
-    prompt += `Project Name: ${projectInfo.name}\n`;
-
-  if (projectInfo.dependencies && Object.keys(projectInfo.dependencies).length > 0) {
-    prompt += `\nKey Dependencies:\n`;
-    const depKeys = Object.keys(projectInfo.dependencies).slice(0, 10);
-    depKeys.forEach(dep => {
-      prompt += `- ${dep}\n`;
-    });
-  }
-
-  prompt += `Description: ${projectInfo.description || 'Unknown'}\n`;
-  if (projectInfo.language) {
-    prompt += `Main Language: ${projectInfo.language}\n`;
-  }
-  if (projectInfo.description) {
-    prompt += `Description: ${projectInfo.description}\n`;
-  }
-  if (projectInfo.language) {
-    prompt += `Main Language: ${projectInfo.language}\n`;
-  }
-  prompt += `Total Files: ${projectInfo.fileCount}\n`;
-    prompt += `Total Directories: ${projectInfo.directoryCount}\n\n`;
-
-  // Enhanced directory structure with role annotations
-  prompt += 'Key Directories with Role Analysis:\n';
-  const directoryRoles = projectInfo.directoryRoles || {};
-  projectInfo.directories.slice(0, 10).forEach(dirPath => {
-    const role = directoryRoles[dirPath] || 'Supporting Infrastructure';
-    prompt += `- ${dirPath} [${role}]\n`;
-  });
-  prompt += '\n';
-
-  prompt += 'Key Files Analysis:\n';
-  projectInfo.fileAnalysis.forEach(file => {
-    prompt += `\n--- File: ${file.path} ---\n`;
-    prompt += `Lines: ${file.lineCount}, Functions: ${file.functionCount}, Classes: ${file.classCount}\n`;
-    if (!config.includeStructureOnly && file.sample) {
-      prompt += `Content Snippet:\n\`\`\`\n${file.sample}\n\`\`\`\n`;
-    }
-  });
-
-  prompt += '\nPlease provide a summary based on this information.';
-
-  return prompt;
-}
+import fetch from 'node-fetch';
 
 export default {
-  formatPrompt
+  setup() {
+    // Load API key or authenticate if required
+    // Here we don't have authentication for simplicity, but in practice, handle authentication.
+  },
+
+  formatPrompt(projectInfo, config) {
+    let prompt =
+      `You are generating a code analysis for the project "${projectInfo.name}". ` +
+      `Here's the structure and contents of the project:\n` +
+      `\n` +
+      `Project structure:\n${config.includeStructure ? projectInfo.directories.join('\n') : ''}\n` +
+      `Number of ${projectInfo.fileCount} files across ${projectInfo.directoryCount} directories\n` +
+      `\n` +
+      `Code overview:\n`;
+
+    for (const analysis of projectInfo.fileAnalysis) {
+      const funcCount = analysis.functions?.length || 0;
+      const classCount = analysis.classes?.length || 0;
+      prompt += `${analysis.filePath} (${analysis.loc} lines):\n`;
+      prompt += `  - ${funcCount} function`;
+      if (funcCount > 1) prompt += 's';
+      prompt += `\n`;
+      prompt += `  - ${classCount} class`;
+      if (classCount > 1) prompt += 'es';
+      prompt += `\n`;
+    }
+
+    if (config.includeDependencies) {
+      prompt += `\nDependencies required:\n`;
+      for (const [depName, version] of Object.entries(projectInfo.dependencies)) {
+        prompt += `- ${depName}@${version}\n`;
+      }
+    }
+
+    prompt += '\nInstructions: \n' +
+      '- Analyze the project structure and code files\n' +
+      '- Highlight key patterns, components, and dependencies\n' +
+      '- Provide a concise overview of how the code is organized and works\n';
+
+    return prompt.trim();
+  },
+
+  async generate(projectInfo, config) {
+    try {
+      const prompt = this.formatPrompt(projectInfo, config);
+
+      const requestBody = {
+        prompt,
+        max_tokens: 200,
+        temperature: 0.7,
+        return_only_completion: true,
+      };
+
+      const response = await fetch('https://api.anthropic.com/v1/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.CLAUDE_API_KEY || 'your_api_key_here', // Placeholder for real API key
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to generate code analysis with status code ${response.status}`);
+        return null;
+      }
+
+      const data = await response.json();
+      // Assuming the API returns the generated code in "completions"
+      return data.completions[0];
+    } catch (error) {
+      console.error('Error generating code analysis: ', error);
+      return null;
+    }
+  },
+
+  // Optional method for setting custom options
+  setOptions(apiKey) {
+  },
+
+  // Optional method for setting project-specific context
+  setContext(projectRoot, packageName) {
+  },
 };

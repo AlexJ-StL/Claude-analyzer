@@ -13,11 +13,11 @@
 // cache.php
 function getCache($key, $ttl = 60) {
     $cachefile = "cache/" . md5($key) . ".json";
-    
+
     if (file_exists($cachefile) && (time() - filemtime($cachefile)) < $ttl) {
         return json_decode(file_get_contents($cachefile), true);
     }
-    
+
     return false;
 }
 
@@ -25,7 +25,7 @@ function setCache($key, $data) {
     if (!file_exists("cache")) {
         mkdir("cache", 0755, true);
     }
-    
+
     $cachefile = "cache/" . md5($key) . ".json";
     file_put_contents($cachefile, json_encode($data));
 }
@@ -89,11 +89,11 @@ if ($result->num_rows > 0) {
     $current_price = $row['price'];
     $current_volume = $row['volume'];
     $timestamp = $row['last_updated'];
-    
+
     // Get previous day's close for change calculation
     $sql_prev = "SELECT close FROM time_series WHERE time_frame = 'daily' ORDER BY date DESC LIMIT 1";
     $result_prev = $conn->query($sql_prev);
-    
+
     if ($result_prev->num_rows > 0) {
         $row_prev = $result_prev->fetch_assoc();
         $prev_close = $row_prev['close'];
@@ -101,7 +101,7 @@ if ($result->num_rows > 0) {
     } else {
         $change_pct = 0;
     }
-    
+
     echo json_encode([
         'success' => true,
         'price' => $current_price,
@@ -135,8 +135,8 @@ if ($conn->connect_error) {
 }
 
 // Get day range (high and low from today's data)
-$sql_day = "SELECT MIN(low) as day_low, MAX(high) as day_high 
-            FROM time_series 
+$sql_day = "SELECT MIN(low) as day_low, MAX(high) as day_high
+            FROM time_series
             WHERE time_frame = 'daily'
             AND date >= CURDATE()";
 $result_day = $conn->query($sql_day);
@@ -152,13 +152,14 @@ if ($result_day->num_rows > 0) {
 
 // If no data for today, use the most recent day
 if ($day_low === null || $day_high === null) {
-    $sql_recent = "SELECT low as day_low, high as day_high 
-                  FROM time_series 
+    $sql_recent = "SELECT low as day_low, high as day_high
+                  FROM time_series
                   WHERE time_frame = 'daily'
                   ORDER BY date DESC
                   LIMIT 1";
     $result_recent = $conn->query($sql_recent);
-    
+}
+
     if ($result_recent->num_rows > 0) {
         $row = $result_recent->fetch_assoc();
         $day_low = $row['day_low'];
@@ -192,7 +193,7 @@ if ($conn->connect_error) {
 $last_timestamp = isset($_GET['last_timestamp']) ? $_GET['last_timestamp'] : null;
 
 // Query for latest trade data
-$sql = "SELECT symbol, timestamp, price, volume FROM real_time_data 
+$sql = "SELECT symbol, timestamp, price, volume FROM real_time_data
         WHERE symbol = 'SPY'";
 
 // If we have a last timestamp, only get newer records
@@ -211,13 +212,16 @@ if ($result->num_rows > 0) {
         if (!isset($prev_close)) {
             $sql_prev = "SELECT close FROM time_series WHERE time_frame = 'daily' ORDER BY date DESC LIMIT 1";
             $result_prev = $conn->query($sql_prev);
-            
+
             if ($result_prev->num_rows > 0) {
                 $row_prev = $result_prev->fetch_assoc();
                 $prev_close = $row_prev['close'];
             } else {
                 $prev_close = $row['price']; // Fallback if no previous close is available
             }
+        }
+    }
+}
 ```
 
 ### Instructions for Claude:

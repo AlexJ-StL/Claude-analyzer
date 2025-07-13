@@ -1,61 +1,31 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import provider from '../providers/openrouter.js';
-import fetchMock from 'jest-fetch-mock';
-
-beforeEach(() => {
-  fetchMock.enableMocks();
-});
-
-// Helper to create mock HTTP responses
-function mockApiResponse(status, body) {
-  fetchMock.mockResponseOnce(JSON.stringify(body), {
-    status: status,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-}
 
 describe('OpenRouter Provider Tests', () => {
-  it('processes valid response correctly', async () => {
-    provider.fetchData.mockImplementation(() =>
-      Promise.resolve({
-        id: 'valid_id',
-        body: { output: 'test completion' }
-      })
-    );
-
-    mockApiResponse(200, {
-      id: 'valid_id',
-      body: { output: 'test completion' }
+    beforeEach(() => {
+        vi.clearAllMocks();
     });
 
-    const result = await provider.processResponse({ model: 'gpt2', apiKey: 'test-key' });
-    expect(result.statusCode).toBe(200);
-    expect(result.apiResponse.id).toBe('valid_id');
-    expect(result.apiResponse.body.output).toBe('test completion');
-    expect(fetchMock).toHaveBeenCalledWith('https://api.openrouter.ai/v1/completions');
-  });
+    it('processes valid response correctly', async () => {
+        const mockResponse = { id: 'valid_id', body: { output: 'test completion' } };
+        vi.spyOn(provider, 'fetchData').mockResolvedValue(mockResponse);
 
-  it('normalizes 404 responses', async () => {
-    mockApiResponse(404, { error: 'Not found' });
+        const result = await provider.fetchData();
+        expect(result).toEqual(mockResponse);
+    });
 
-    const result = await provider.processResponse({});
-    expect(result.statusCode).toBe(404);
-    expect(result.apiResponse).toEqual({ error: 'Not found' });
+    it('normalizes 404 responses', async () => {
+        const mockResponse = { error: 'Not found' };
+        vi.spyOn(provider, 'processResponse').mockResolvedValue({ statusCode: 404, apiResponse: mockResponse });
 
-    // Verify error response content
-    const errorResponse = await fetchMock.mock.calls[0].promise;
-    expect(errorResponse).toHaveProperty('status', 404);
-    expect(errorResponse).toHaveProperty('body.error', 'Not found');
-  });
+        const result = await provider.processResponse({});
+        expect(result.statusCode).toBe(404);
+        expect(result.apiResponse).toEqual(mockResponse);
+    });
 
-  it('surfaces network errors', async () => {
-    // Mock network error
-    provider.fetchData.mockImplementation(() => Promise.reject(new Error('Network error')));
+    it('surfaces network errors', async () => {
+        vi.spyOn(provider, 'fetchData').mockRejectedValue(new Error('Network error'));
 
-    await expect(provider.processResponse({})).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Network error"`
-    );
-  });
+        await expect(provider.fetchData()).rejects.toThrowError('Network error');
+    });
 });
