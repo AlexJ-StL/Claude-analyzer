@@ -7,8 +7,8 @@ import pluginReact from "eslint-plugin-react";
 import jsonPlugin from "@eslint/json"; // Alias to avoid conflict with 'json' file extension rule
 import markdownPlugin from "@eslint/markdown"; // Alias
 
-// With ESLint v9, defineConfig is a direct named export from 'eslint'
-import { defineConfig } from 'eslint';
+import pkg from 'eslint';
+const { defineConfig } = pkg;
 
 export default defineConfig([
   // Basic JavaScript rules and browser globals
