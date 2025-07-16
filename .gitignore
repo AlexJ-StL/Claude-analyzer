@@ -51,9 +51,6 @@ web_modules/
 # Optional npm cache directory
 .npm
 
-# Optional eslint cache
-.eslintcache
-
 # Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/
@@ -115,3 +112,6 @@ public/build/
 
 # VSCode settings
 .vscode/
+
+# Test Prints and Dev Throw-Aways
+.dev/*

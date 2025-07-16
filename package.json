@@ -4,6 +4,12 @@
   "description": "A project analysis tool using CLAUDE API to extract code documentation and summary annotations.",
   "main": "src/index.js",
   "scripts": {
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "check": "biome check --write .",
+    "check:ci": "biome ci .",
     "test": "vitest"
   },
   "dependencies": {
@@ -13,6 +19,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "globals": "^15.15.0",
     "typescript": "^5.3.0"
   }
